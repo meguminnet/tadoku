@@ -3,15 +3,33 @@ export interface Service {
   externalUrl: string
 }
 
-const createService = (suffix: string): Service => ({
-  internalHost: `${process.env.API_ROOT}/${suffix}`,
-  externalUrl: `/api/${suffix}`,
-})
+const serviceSuffixToConfigKey = (suffix: string): string =>
+  suffix.toUpperCase().replace('-', '_')
+
+const createService = (suffix: string): Service => {
+  let internalHost = `${process.env.API_ROOT}/${suffix}`
+
+  const key = `API_ROOT_${serviceSuffixToConfigKey(suffix)}`
+  const internalHostFromConfig = process.env[key]
+
+  if (internalHostFromConfig !== undefined) {
+    internalHost = internalHostFromConfig
+  }
+
+  return {
+    internalHost,
+    externalUrl: `/api/${suffix}`,
+  }
+}
 
 const services: { [key: string]: Service } = {
   tadokuContest: createService('tadoku-contest-api'),
   identity: createService('identity-api'),
   blog: createService('blog-api'),
+}
+
+export const getAllServices = () => {
+  return Object.values(services)
 }
 
 export const getService = (service: string): Service => {
